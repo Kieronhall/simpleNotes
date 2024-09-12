@@ -49,11 +49,12 @@ namespace SamplePlugin.Windows
 
         public override void Draw()
         {
-            
+
             //Lock Window Button
-            if (ImGui.Button("Lock Window"))
+            bool isLocked = !IsMainWindowWindowMovable;
+            if (ImGui.Checkbox("Lock Window", ref isLocked))
             {
-                IsMainWindowWindowMovable = !IsMainWindowWindowMovable;
+                IsMainWindowWindowMovable = !isLocked;
                 //Configuration.Save();
             }
 
@@ -81,13 +82,14 @@ namespace SamplePlugin.Windows
 
             // Text Box
             ImGui.Text("Enter some notes:");
-
             var windowSize2 = ImGui.GetWindowSize();
+            var textBoxHeight = windowSize2.Y - ImGui.GetCursorPosY() - ImGui.GetFrameHeightWithSpacing();
+            var textBoxSize = new Vector2(windowSize2.X - 20, textBoxHeight);
 
-            var textBoxHeight = windowSize2.Y - ImGui.GetCursorPosY() - ImGui.GetFrameHeightWithSpacing(); // Remaining height minus the label height and some padding
-            var textBoxSize = new Vector2(windowSize2.X - 20, textBoxHeight); // Adjust width and height
-
-            ImGui.InputTextMultiline("##UserInputTextBox", ref userInput, 1024, textBoxSize, ImGuiInputTextFlags.AllowTabInput);
+            ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + textBoxSize.X);
+            ImGui.InputTextMultiline("##UserInputTextBox", ref userInput, 1024, textBoxSize,
+                ImGuiInputTextFlags.AllowTabInput);
+            ImGui.PopTextWrapPos();
 
 
             ImGui.Spacing();
