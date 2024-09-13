@@ -12,12 +12,16 @@ namespace SamplePlugin.Windows
     {
         private string IconImagePath;
         private Plugin Plugin;
-
         private bool IsMainWindowWindowMovable = true;
         private Configuration Configuration;
 
-        // Variable to hold the user's input text
         private string userInput = string.Empty;
+
+
+        private string[] profileTexts = new string[5];
+        private int currentProfileIndex = 0;
+
+        private float fontSize = 16.0f; // Default font size
 
         public MainWindow(Plugin plugin, string iconImagePath)
             : base("frimpyNotes", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -27,16 +31,20 @@ namespace SamplePlugin.Windows
                 MinimumSize = new Vector2(375, 330),
                 MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
             };
-
             IconImagePath = iconImagePath;
             Plugin = plugin;
+
+            // Initialize profile texts to empty
+            for (int i = 0; i < profileTexts.Length; i++)
+            {
+                profileTexts[i] = string.Empty;
+            }
         }
 
         public void Dispose() { }
 
         public override void PreDraw()
         {
-            //Checking of window is movable or not
             if (IsMainWindowWindowMovable)
             {
                 Flags &= ~ImGuiWindowFlags.NoMove;
@@ -49,48 +57,70 @@ namespace SamplePlugin.Windows
 
         public override void Draw()
         {
-
-            //Lock Window Button
+            // Lock Window Button
             bool isLocked = !IsMainWindowWindowMovable;
             if (ImGui.Checkbox("Lock Window", ref isLocked))
             {
                 IsMainWindowWindowMovable = !isLocked;
                 //Configuration.Save();
             }
-
             ImGui.Spacing();
 
-            var imageSize = new Vector2(50, 50);
-            var iconImage = Plugin.TextureProvider.GetFromFile(IconImagePath).GetWrapOrDefault();
-            if (iconImage != null)
+            // Font Size Slider
+            if (ImGui.SliderFloat("Font Size", ref fontSize, 8.0f, 32.0f, "%.0f"))
             {
-                var windowSize = ImGui.GetWindowSize();
-                // putting image top right corner
-                var imagePosition = new Vector2(
-                    windowSize.X - imageSize.X - 10, 
-                    30 
-                );
-                ImGui.SetCursorPos(imagePosition);
-                ImGui.Image(iconImage.ImGuiHandle, imageSize);
+                // Font size changed
+                //Configuration.FontSize = fontSize;
+                //Configuration.Save();
             }
-            else
-            {
-                ImGui.Text("Image not found.");
-            }
-
             ImGui.Spacing();
+
+            // Profile Buttons (1-5)
+            ImGui.BeginGroup();
+            for (int i = 0; i < 5; i++)
+            {
+                string buttonLabel = $"Profile {i + 1}";
+                if (ImGui.Button(buttonLabel))
+                {
+                    profileTexts[currentProfileIndex] = userInput;
+
+                    currentProfileIndex = i;
+                    userInput = profileTexts[currentProfileIndex];
+                }
+            }
+            ImGui.EndGroup();
+
+            ImGui.SameLine(); // Aligning the text box beside the profile buttons
 
             // Text Box
-            ImGui.Text("Enter some notes:");
+            ImGui.BeginGroup();
+            ImGui.Text($"Notes for Profile {currentProfileIndex + 1}:");
             var windowSize2 = ImGui.GetWindowSize();
             var textBoxHeight = windowSize2.Y - ImGui.GetCursorPosY() - ImGui.GetFrameHeightWithSpacing();
-            var textBoxSize = new Vector2(windowSize2.X - 20, textBoxHeight);
+            var textBoxSize = new Vector2(windowSize2.X - 100, textBoxHeight); // Adjusted width to fit buttons
 
-            ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + textBoxSize.X);
-            ImGui.InputTextMultiline("##UserInputTextBox", ref userInput, 1024, textBoxSize,
-                ImGuiInputTextFlags.AllowTabInput);
-            ImGui.PopTextWrapPos();
+            // child window to contain the input text
+            ImGui.BeginChild("ScrollingRegion", textBoxSize, true, ImGuiWindowFlags.HorizontalScrollbar);
 
+            float wrapWidth = ImGui.GetContentRegionAvail().X;
+
+            ImGui.PushFont(ImGui.GetFont());
+            ImGui.SetWindowFontScale(fontSize / 16.0f);
+
+            ImGui.InputTextMultiline(
+                "##UserInputTextBox",
+                ref userInput,
+                1024,
+                new Vector2(wrapWidth, textBoxHeight - 20),
+                ImGuiInputTextFlags.AllowTabInput | ImGuiInputTextFlags.CtrlEnterForNewLine,
+                (ImGuiInputTextCallback)null
+            );
+
+            ImGui.SetWindowFontScale(1.0f);
+            ImGui.PopFont();
+
+            ImGui.EndChild();
+            ImGui.EndGroup();
 
             ImGui.Spacing();
         }

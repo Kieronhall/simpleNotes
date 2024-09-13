@@ -2,11 +2,13 @@
   "Author": "Frimpy Kun",
   "Name": "frimpyNotes",
   "Punchline": "Small window to keep notes on the screen.",
-  "Description": "A popup window which lets you save and load notes to keep on the screen separate from the native chat window. '/notes' to open window.",
+  "Description": "A popup window which lets you save and load notes to keep on the screen separate from the native chat window. Useful for raid macros! '/notes' to open window.",
   "ApplicableVersion": "any",
   "Tags": [
     "sample",
-    "plugin"
+    "plugin",
+    "notes",
+    "textbox"
   ]
 }
 
